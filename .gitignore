@@ -1,0 +1,17 @@
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+
+# Astro generated types
+.astro/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+demo_backup/
