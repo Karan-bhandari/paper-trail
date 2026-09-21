@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Gwern Branwen",
+    "url": "https://gwern.net/feed",
+    "site": "https://gwern.net",
+    "category": "essays",
+    "description": "In-depth explorations of psychology, statistics, AI, and cognitive augmentation."
+  },
+  {
+    "name": "Fly.io Blog",
+    "url": "https://fly.io/blog/feed.xml",
+    "site": "https://fly.io/blog",
+    "category": "systems",
+    "description": "Deep dives into edge computing, distributed SQLite, Linux networking, and Elixir."
+  },
+  {
+    "name": "Simon Willison",
+    "url": "https://simonwillison.net/atom/everything/",
+    "site": "https://simonwillison.net",
+    "category": "ai & tools",
+    "description": "Co-creator of Django. Daily dispatches on LLMs, web development, and SQLite."
+  },
+  {
+    "name": "Dan Luu",
+    "url": "https://danluu.com/atom.xml",
+    "site": "https://danluu.com",
+    "category": "hardware & systems",
+    "description": "Rigorous performance analysis, hardware engineering, and systems realities."
+  },
+  {
+    "name": "Bartosz Ciechanowski",
+    "url": "https://ciechanow.ski/atom.xml",
+    "site": "https://ciechanow.ski",
+    "category": "interactive",
+    "description": "Masterpieces of interactive visual explanation and mechanical physics."
+  },
+  {
+    "name": "Julia Evans",
+    "url": "https://jvns.ca/atom.xml",
+    "site": "https://jvns.ca",
+    "category": "debugging",
+    "description": "Pragmatic, visual guides to networking, Linux internals, DNS, and Git."
+  }
+]
