@@ -1,0 +1,174 @@
+---
+import type { FeedItem } from '../lib/feed-parser';
+
+interface Props {
+  item: FeedItem;
+}
+
+const { item } = Astro.props;
+const formattedDate = item.pubDate.toISOString().slice(0, 10);
+---
+
+<article class="radar-item" data-source={item.sourceName.toLowerCase()}>
+  <div class="radar-header">
+    <div class="radar-title-group">
+      <span class="radar-source-tag">[{item.sourceName.toUpperCase()}]</span>
+      <a href={item.link} target="_blank" rel="noopener noreferrer" class="radar-link">
+        {item.title}
+      </a>
+    </div>
+    <time datetime={item.pubDate.toISOString()} class="radar-date">{formattedDate}</time>
+  </div>
+
+  {item.snippet && (
+    <p class="radar-snippet">
+      {item.snippet}
+    </p>
+  )}
+
+  <div class="radar-footer">
+    <span class="category-meta">#{item.sourceCategory}</span>
+    <div class="radar-actions">
+      <button
+        class="radar-curate-btn"
+        data-title={item.title}
+        data-url={item.link}
+        data-author={item.sourceName}
+        data-category={item.sourceCategory}
+        title="Copy CLI command to curate this link"
+      >
+        [COPY_CURATE_COMMAND]
+      </button>
+      <a href={item.link} target="_blank" rel="noopener noreferrer" class="radar-ext-link">
+        [VISIT_ARTICLE &rarr;]
+      </a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .radar-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+
+  .radar-item:hover {
+    border-color: var(--primary);
+  }
+
+  .radar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .radar-title-group {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .radar-source-tag {
+    font-size: 11px;
+    font-weight: bold;
+    background: var(--text);
+    color: var(--bg);
+    padding: 1px 4px;
+  }
+
+  .radar-link {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .radar-date {
+    font-size: 11.5px;
+    color: var(--text-subtle);
+    white-space: nowrap;
+  }
+
+  .radar-snippet {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 6px 0 8px;
+    line-height: 1.5;
+  }
+
+  .radar-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+    padding-top: 6px;
+    border-top: 1px dotted var(--border-subtle);
+  }
+
+  .category-meta {
+    color: var(--text-subtle);
+    text-transform: uppercase;
+  }
+
+  .radar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .radar-curate-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 1px 3px;
+    min-width: 155px;
+    text-align: right;
+  }
+
+  .radar-curate-btn:hover {
+    color: var(--primary);
+  }
+
+  .radar-ext-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 11px;
+  }
+  .radar-ext-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+</style>
+
+<script>
+  // Copy curation CLI command with event delegation (runs once per page)
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement | null;
+    const btn = target?.closest('.radar-curate-btn');
+    if (!btn) return;
+
+    const url = btn.getAttribute('data-url');
+    const author = btn.getAttribute('data-author');
+    const category = btn.getAttribute('data-category');
+    const cmd = `npm run add "${url}" "Curated from ${author}" "${category}"`;
+    navigator.clipboard.writeText(cmd).then(() => {
+      const original = btn.textContent;
+      btn.textContent = '[CMD_COPIED!]';
+      setTimeout(() => {
+        btn.textContent = original;
+      }, 1500);
+    });
+  });
+</script>

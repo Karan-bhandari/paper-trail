@@ -1,0 +1,296 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+  activeTab?: 'curated' | 'radar' | 'sources';
+}
+
+const {
+  title = 'PAPER_TRAIL // Curated Links & RSS Aggregator',
+  description = 'A continuous paper trail of essays, systems papers, and internet curiosities.',
+  activeTab = 'curated',
+} = Astro.props;
+
+// Determine base URL for links (handling GitHub Pages subpath)
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<!DOCTYPE html>
+<html lang="en" data-mode="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+
+  <!-- RSS & OPML auto-discovery -->
+  <link rel="alternate" type="application/rss+xml" title="Paper Trail RSS" href={`${baseUrl}/rss.xml`} />
+  <link rel="alternate" type="application/xml" title="Followed Sources OPML" href={`${baseUrl}/feeds.opml`} />
+
+  <!-- Prevent FOUC: apply pinned theme immediately -->
+  <script is:inline>
+    {
+      const saved = localStorage.getItem('theme-mode');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const mode = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-mode', mode);
+    }
+  </script>
+
+  <style is:global>
+    :root {
+      --bg: #FFFFFF;
+      --surface: #FAFAFA;
+      --surface-hover: #F0F0F0;
+      --border: #000000;
+      --border-subtle: #D0D0D0;
+      --text: #000000;
+      --text-muted: #555555;
+      --text-subtle: #777777;
+      --primary: #0000EE;        /* Classic Web Blue */
+      --primary-hover: #551A8B;  /* Visited/Hover Purple */
+      --accent-tag-bg: #EEEEEE;
+      --accent-tag-text: #000000;
+      --badge-bg: #000000;
+      --badge-text: #FFFFFF;
+      --font-mono: "SF Mono", Menlo, Consolas, Monaco, "Courier New", monospace;
+      --radius: 0px;
+    }
+
+    :root[data-mode="dark"] {
+      --bg: #0C0C0C;
+      --surface: #171717;
+      --surface-hover: #222222;
+      --border: #555555;
+      --border-subtle: #2C2C2C;
+      --text: #F0F0F0;
+      --text-muted: #A0A0A0;
+      --text-subtle: #707070;
+      --primary: #66AAFF;
+      --primary-hover: #99CCFF;
+      --accent-tag-bg: #222222;
+      --accent-tag-text: #FFFFFF;
+      --badge-bg: #FFFFFF;
+      --badge-text: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 80px;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    a:hover {
+      color: var(--primary-hover);
+    }
+
+    .site-container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 24px 18px;
+    }
+
+    /* Masthead Banner */
+    .top-sys-bar {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 14px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .top-sys-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-mono {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+    }
+    .btn-mono:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+    #themeToggleBtn {
+      min-width: 124px;
+      justify-content: center;
+    }
+    #themeModeName {
+      display: inline-block;
+      width: 5ch;
+      text-align: left;
+    }
+
+    /* Tab Navigation */
+    .nav-tabs-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .tab-link {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      font-size: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .tab-link:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+    .tab-link.active {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+    }
+
+    /* Section divider headers */
+    .section-headline {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 4px;
+      margin: 20px 0 14px;
+    }
+
+    /* Brutalist Footer */
+    footer.site-footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="site-container">
+    <!-- TOP SYS BAR -->
+    <header class="top-sys-bar">
+      <div>
+        <h1 class="brand-title">
+          <a href={`${baseUrl}/`} style="color: inherit; text-decoration: none;">
+            PAPER_TRAIL // LINKS
+          </a>
+        </h1>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 2px;">
+          A continuous paper trail of essays, systems papers, and internet curiosities.
+        </p>
+      </div>
+
+      <div class="top-sys-actions">
+        <a href={`${baseUrl}/rss.xml`} class="btn-mono" title="Subscribe via RSS 2.0">
+          [RSS 2.0]
+        </a>
+        <a href={`${baseUrl}/feeds.opml`} class="btn-mono" title="Export Sources OPML">
+          [EXPORT OPML]
+        </a>
+        <button id="themeToggleBtn" class="btn-mono" title="Toggle Light/Dark Mode">
+          [THEME: <span id="themeModeName">LIGHT</span>]
+        </button>
+      </div>
+    </header>
+
+    <!-- BRUTALIST TAB NAVIGATION -->
+    <nav class="nav-tabs-bar" aria-label="Main navigation">
+      <a href={`${baseUrl}/`} class={`tab-link ${activeTab === 'curated' ? 'active' : ''}`}>
+        [1. CURATED DISPATCHES]
+      </a>
+      <a href={`${baseUrl}/radar`} class={`tab-link ${activeTab === 'radar' ? 'active' : ''}`}>
+        [2. THE RADAR]
+      </a>
+      <a href={`${baseUrl}/feeds`} class={`tab-link ${activeTab === 'sources' ? 'active' : ''}`}>
+        [3. SOURCES / BLOGROLL]
+      </a>
+    </nav>
+
+    <!-- PAGE CONTENT -->
+    <slot />
+
+    <!-- SITE FOOTER -->
+    <footer class="site-footer">
+      <div>
+        <span>HOSTED: <strong>GITHUB_PAGES</strong> ($0) &bull; 0 TRACKING &bull; 100% STATIC</span>
+      </div>
+      <div>
+        <span>CURATED BY <strong>KARAN</strong> &bull; GENERATED VIA <a href="https://astro.build" target="_blank" rel="noopener">ASTRO</a></span>
+      </div>
+    </footer>
+  </div>
+
+  <script is:inline>
+    // Theme Mode Toggle
+    const toggleBtn = document.getElementById('themeToggleBtn');
+    const modeLabel = document.getElementById('themeModeName');
+
+    function syncLabel() {
+      const mode = document.documentElement.getAttribute('data-mode') || 'light';
+      if (modeLabel) modeLabel.textContent = mode.toUpperCase();
+    }
+    syncLabel();
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-mode') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-mode', next);
+        localStorage.setItem('theme-mode', next);
+        syncLabel();
+      });
+    }
+  </script>
+</body>
+</html>
