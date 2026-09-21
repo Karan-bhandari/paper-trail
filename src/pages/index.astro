@@ -1,0 +1,67 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LinkCard from '../components/LinkCard.astro';
+import SearchFilter from '../components/SearchFilter.astro';
+import { getCollection } from 'astro:content';
+
+const allLinks = await getCollection('links');
+allLinks.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// Extract tags sorted by frequency (top 12 shown as quick pills)
+const tagCounts = allLinks.flatMap((l) => l.data.tags).reduce((acc, tag) => {
+  acc[tag] = (acc[tag] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+const topTags = Object.entries(tagCounts)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 12)
+  .map(([tag]) => tag);
+---
+
+<BaseLayout
+  title="CURATED_DISPATCHES // Minimalist Brutalist Link Hub"
+  description="Hand-picked links, papers, and architecture essays with personal commentary."
+  activeTab="curated"
+>
+  <div class="dispatches-intro">
+    <p>
+      Personal archive of curated links across the web. Hand-picked and annotated by Karan.
+      Total curated entries: <strong>{allLinks.length}</strong>.
+    </p>
+  </div>
+
+  <SearchFilter
+    placeholder="grep -i 'keyword or domain' ./dispatches/*"
+    targetSelector=".curated-link-card"
+    tags={topTags}
+  />
+
+  <div class="section-headline">
+    == RECENT_DISPATCHES ({allLinks.length}) ==
+  </div>
+
+  <main class="links-list" id="curatedLinksList">
+    {allLinks.map((link) => (
+      <LinkCard
+        title={link.data.title}
+        url={link.data.url}
+        date={link.data.date}
+        tags={link.data.tags}
+        author={link.data.author}
+        via={link.data.via}
+        notes={link.body}
+      />
+    ))}
+  </main>
+</BaseLayout>
+
+<style>
+  .dispatches-intro {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    border-left: 2px solid var(--border);
+    padding-left: 10px;
+  }
+</style>

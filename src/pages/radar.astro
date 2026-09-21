@@ -1,0 +1,90 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RadarItem from '../components/RadarItem.astro';
+import SearchFilter from '../components/SearchFilter.astro';
+import { aggregateAllFeeds } from '../lib/feed-parser';
+import feeds from '../data/feeds.json';
+
+// Fetch latest entries from all followed feeds at build time
+const radarItems = await aggregateAllFeeds(feeds, 4);
+
+// Unique categories for filtering
+const categories = Array.from(new Set(feeds.map((f) => f.category))).sort();
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<BaseLayout
+  title="THE_RADAR // Inbound RSS Aggregator"
+  description="Aggregated stream of recent articles from followed feeds."
+  activeTab="radar"
+>
+  <div class="radar-intro-box">
+    <p>
+      <strong>THE RADAR</strong> is an automated stream aggregating the latest articles from {feeds.length} engineering & essay feeds I follow.
+      Click <code>[COPY_CURATE_COMMAND]</code> on any entry to promote it to your curated linklog.
+    </p>
+    <div class="radar-stats-bar">
+      <span>MONITORED_FEEDS: <strong>{feeds.length}</strong></span>
+      <span>CACHED_HEADLINES: <strong>{radarItems.length}</strong></span>
+      <a href={`${baseUrl}/feeds`} class="sources-link">[VIEW_ALL_SOURCES &rarr;]</a>
+    </div>
+  </div>
+
+  <SearchFilter
+    placeholder="grep -i 'topic or publication' ./radar/*"
+    targetSelector=".radar-item"
+    tags={categories}
+  />
+
+  <div class="section-headline">
+    == AGGREGATED_RIVER ({radarItems.length} HEADLINES) ==
+  </div>
+
+  <main class="radar-stream">
+    {radarItems.length > 0 ? (
+      radarItems.map((item) => <RadarItem item={item} />)
+    ) : (
+      <div class="radar-empty-notice">
+        <p>[!] Feeds were unreachable or network was unavailable during static generation.</p>
+        <p>Feeds will refresh automatically on the next GitHub Actions build or local network run.</p>
+      </div>
+    )}
+  </main>
+</BaseLayout>
+
+<style>
+  .radar-intro-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .radar-stats-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-subtle);
+    font-size: 11.5px;
+  }
+
+  .sources-link {
+    font-weight: bold;
+    color: var(--primary);
+  }
+
+  .radar-empty-notice {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+</style>

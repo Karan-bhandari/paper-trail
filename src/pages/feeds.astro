@@ -1,0 +1,181 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import feeds from '../data/feeds.json';
+
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<BaseLayout
+  title="SOURCES // Followed RSS Feeds & Blogroll"
+  description="Directory of blogs, engineering teams, and newsletters I subscribe to."
+  activeTab="sources"
+>
+  <div class="sources-intro-box">
+    <div class="sources-header-row">
+      <div>
+        <h2 style="font-size: 14px; font-weight: bold; text-transform: uppercase;">
+          FOLLOWED_FEEDS & BLOGROLL ({feeds.length})
+        </h2>
+        <p style="color: var(--text-muted); font-size: 12.5px; margin-top: 4px;">
+          The blogs and engineering newsletters powering <strong>THE RADAR</strong>.
+        </p>
+      </div>
+
+      <div class="sources-actions">
+        <a href={`${baseUrl}/feeds.opml`} class="btn-mono" download="feeds.opml">
+          [DOWNLOAD_OPML]
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-headline">
+    == BLOGROLL_DIRECTORY ==
+  </div>
+
+  <div class="feeds-directory-table">
+    {feeds.map((feed) => (
+      <div class="feed-source-row">
+        <div class="feed-col-main">
+          <div class="feed-name-line">
+            <span class="prompt-marker">></span>
+            <a href={feed.site || feed.url} target="_blank" rel="noopener noreferrer" class="feed-name-link">
+              {feed.name}
+            </a>
+            <span class="feed-category-badge">#{feed.category}</span>
+          </div>
+          {feed.description && (
+            <p class="feed-description">{feed.description}</p>
+          )}
+        </div>
+
+        <div class="feed-col-links">
+          <a href={feed.url} target="_blank" rel="noopener noreferrer" class="feed-rss-link" title="Direct RSS/Atom feed">
+            [FEED_XML]
+          </a>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="opml-info-callout">
+    <h3>HOW TO USE THIS READING LIST:</h3>
+    <p>
+      1. Click <code>[DOWNLOAD_OPML]</code> above to get the standard XML outline.<br/>
+      2. In your RSS client (NetNewsWire, Feedly, Reeder, Readwise), go to <strong>File &rarr; Import OPML</strong>.<br/>
+      3. To add more feeds to this site, simply add an entry to <code>src/data/feeds.json</code>.
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .sources-intro-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+
+  .sources-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .feeds-directory-table {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .feed-source-row {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .feed-source-row:hover {
+    border-color: var(--primary);
+  }
+
+  .feed-col-main {
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .feed-name-line {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .prompt-marker {
+    color: var(--text-muted);
+    font-weight: bold;
+  }
+
+  .feed-name-link {
+    font-size: 14.5px;
+    font-weight: 700;
+  }
+
+  .feed-category-badge {
+    font-size: 11px;
+    background: var(--accent-tag-bg);
+    color: var(--accent-tag-text);
+    padding: 1px 5px;
+    border: 1px solid var(--border-subtle);
+    text-transform: uppercase;
+  }
+
+  .feed-description {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 5px;
+    line-height: 1.45;
+  }
+
+  .feed-col-links {
+    display: flex;
+    align-items: center;
+  }
+
+  .feed-rss-link {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    border: 1px solid var(--border-subtle);
+    padding: 2px 6px;
+  }
+
+  .feed-rss-link:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .opml-info-callout {
+    margin-top: 30px;
+    border: 1px dashed var(--border);
+    padding: 16px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .opml-info-callout h3 {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+</style>
