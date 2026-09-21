@@ -1,0 +1,201 @@
+---
+interface Props {
+  title: string;
+  url: string;
+  date: Date;
+  tags: string[];
+  author?: string;
+  via?: string;
+  notes?: string;
+}
+
+const { title, url, date, tags, author, via, notes } = Astro.props;
+
+const domain = new URL(url).hostname.replace(/^www\./, '');
+
+const formattedDate = date.toISOString().slice(0, 10);
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<article class="curated-link-card" data-tags={tags.join(',')}>
+  <div class="card-header">
+    <div class="card-title-row">
+      <span class="prompt-arrow">&gt;</span>
+      <a href={url} target="_blank" rel="noopener noreferrer" class="link-anchor">
+        {title}
+      </a>
+      <span class="domain-tag">[{domain}]</span>
+    </div>
+    <time datetime={date.toISOString()} class="date-stamp">{formattedDate}</time>
+  </div>
+
+  {notes && (
+    <div class="card-notes">
+      {notes}
+    </div>
+  )}
+
+  <div class="card-footer">
+    <div class="tag-list">
+      {tags.map((tag) => (
+        <a href={`${baseUrl}/tags/${tag}`} class="tag-badge">
+          [{tag}]
+        </a>
+      ))}
+      {author && <span class="author-meta">by {author}</span>}
+      {via && <span class="via-meta">(via {via})</span>}
+    </div>
+
+    <div class="card-actions">
+      <button class="action-copy-btn" data-copy-url={url} title="Copy original link">
+        [COPY_URL]
+      </button>
+    </div>
+  </div>
+</article>
+
+<style>
+  .curated-link-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    position: relative;
+    transition: border-color 0.15s ease;
+  }
+
+  .curated-link-card:hover {
+    border-color: var(--primary);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .card-title-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .prompt-arrow {
+    font-weight: bold;
+    color: var(--text-muted);
+    user-select: none;
+  }
+
+  .link-anchor {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    line-height: 1.35;
+  }
+
+  .domain-tag {
+    font-size: 12px;
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    padding: 1px 5px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .date-stamp {
+    font-size: 12px;
+    color: var(--text-subtle);
+    white-space: nowrap;
+  }
+
+  .card-notes {
+    font-size: 13.5px;
+    margin: 8px 0 12px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-subtle);
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tag-badge {
+    background: var(--accent-tag-bg);
+    color: var(--accent-tag-text);
+    padding: 1px 5px;
+    text-decoration: none;
+    border: 1px solid var(--border-subtle);
+    font-size: 11.5px;
+  }
+
+  .tag-badge:hover {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  .author-meta, .via-meta {
+    font-size: 11.5px;
+    color: var(--text-subtle);
+  }
+
+  .card-actions {
+    display: flex;
+    align-items: center;
+  }
+
+  .action-copy-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 4px;
+    min-width: 76px;
+    text-align: right;
+  }
+
+  .action-copy-btn:hover {
+    color: var(--primary);
+  }
+</style>
+
+<script>
+  // Copy URL action handler with event delegation (runs once per page)
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement | null;
+    const btn = target?.closest('.action-copy-btn');
+    if (!btn) return;
+
+    const url = btn.getAttribute('data-copy-url');
+    if (url) {
+      navigator.clipboard.writeText(url).then(() => {
+        const original = btn.textContent;
+        btn.textContent = '[COPIED!]';
+        setTimeout(() => {
+          btn.textContent = original;
+        }, 1500);
+      });
+    }
+  });
+</script>
