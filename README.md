@@ -78,6 +78,6 @@ Feeds are polled at build time to generate `/radar`.
 
 ## Deployment
 
-Pushes to `main` trigger `.github/workflows/deploy.yml` to build and deploy to GitHub Pages via GitHub Actions. A daily cron at 08:00 UTC rebuilds the site to keep `/radar` updated.
+Pushes to `main` trigger `.github/workflows/deploy.yml` to build and deploy to GitHub Pages via GitHub Actions. A scheduled cron every 2 hours rebuilds the site to keep `/radar` updated.
 
 
