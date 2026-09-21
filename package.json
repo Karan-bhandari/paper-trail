@@ -1,0 +1,27 @@
+{
+  "name": "paper-trail",
+  "version": "1.0.0",
+  "description": "Paper Trail — Minimalist Brutalist link log and RSS aggregator on GitHub Pages",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "add": "node scripts/add-link.mjs"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/rss": "^4.0.19",
+    "astro": "^7.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.1",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
+  }
+}
