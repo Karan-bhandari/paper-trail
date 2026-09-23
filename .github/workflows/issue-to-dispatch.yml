@@ -1,0 +1,61 @@
+name: Create Dispatch from Issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  create-dispatch-pr:
+    # Security: Strictly restrict execution to the repository owner
+    if: github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Scrape Metadata & Generate Dispatch
+        id: dispatch
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          node scripts/add-link.mjs --from-issue
+
+      - name: Commit and Open Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "Karan Bhandari"
+          git config user.email "30714687+Karan-bhandari@users.noreply.github.com"
+
+          BRANCH="dispatch/${{ steps.dispatch.outputs.slug }}"
+          git checkout -b "$BRANCH"
+          git add src/content/links/
+          git commit -m "content: add dispatch '${{ steps.dispatch.outputs.title }}'"
+          git push -u origin "$BRANCH"
+
+          PR_URL=$(gh pr create \
+            --title "Dispatch: ${{ steps.dispatch.outputs.title }}" \
+            --body "Closes #${{ github.event.issue.number }}
+
+### Dispatch Preview
+- **Title**: ${{ steps.dispatch.outputs.title }}
+- **URL**: ${{ steps.dispatch.outputs.url }}
+- **Tags**: \`${{ steps.dispatch.outputs.tags }}\`
+- **File**: \`src/content/links/${{ steps.dispatch.outputs.filename }}\`
+
+*Generated from issue #${{ github.event.issue.number }}. Merge to publish live.*" \
+            --head "$BRANCH" \
+            --base main)
+
+          gh issue comment ${{ github.event.issue.number }} --body "Created Pull Request: $PR_URL - Review and tap **Merge pull request** to publish to Paper Trail."

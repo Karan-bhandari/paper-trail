@@ -85,14 +85,43 @@ ${notes}
 `;
 }
 
+// Parses GitHub issue body and title
+export function parseIssueBody(body = '', title = '') {
+  const urlMatch = body.match(/###\s*URL\s*\n+([^\n#]+)/i);
+  const tagsMatch = body.match(/###\s*Tags\s*\n+([^\n#]+)/i);
+  const notesMatch = body.match(/###\s*Notes(?:\s*\/\s*Takeaway)?\s*\n+([\s\S]*?)(?:###|$)/i);
+
+  let url = urlMatch ? urlMatch[1].trim() : '';
+  let tags = tagsMatch ? tagsMatch[1].trim() : '';
+  let notes = notesMatch ? notesMatch[1].trim() : '';
+
+  if (!url || url.toLowerCase() === '_no response_') {
+    const rawMatch = (body + ' ' + title).match(/https?:\/\/[^\s)"]+/);
+    url = rawMatch ? rawMatch[0].trim() : '';
+  }
+
+  url = url.replace(/^[<(\[]+|[>)\]]+$/g, '').trim();
+
+  if (tags.toLowerCase() === '_no response_') tags = '';
+  if (notes.toLowerCase() === '_no response_') notes = '';
+
+  const tagList = tags
+    ? tags.split(',').map((t) => t.trim()).filter(Boolean)
+    : ['reads'];
+
+  return { url, tags: tagList.length > 0 ? tagList : ['reads'], notes };
+}
+
 // CLI entrypoint
 async function main() {
   const args = process.argv.slice(2);
+  const fromIssue = args.includes('--from-issue');
 
-  if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
+  if (!fromIssue && (args.length === 0 || args.includes('--help') || args.includes('-h'))) {
     console.log(`
 [+] Usage:
     npm run add <url> [notes] [tags]
+    npm run add -- --from-issue
 
 [+] Examples:
     npm run add "https://fly.io/blog/all-in-on-sqlite/" "Great post on SQLite replication" "systems,databases"
@@ -100,6 +129,7 @@ async function main() {
 
 [+] Options:
     --dry-run, --test    Simulate scraping and markdown generation without writing to disk
+    --from-issue         Parse URL, tags, and notes from ISSUE_BODY / ISSUE_TITLE env variables
 `);
     process.exit(0);
   }
@@ -107,11 +137,27 @@ async function main() {
   const isTest = args.includes('--test') || args.includes('--dry-run');
   const filteredArgs = args.filter((a) => !a.startsWith('--'));
 
-  const inputUrl = filteredArgs[0];
-  const inputNotes = filteredArgs[1] || '';
-  const inputTags = filteredArgs[2]
-    ? filteredArgs[2].split(',').map((t) => t.trim())
-    : ['reads'];
+  let inputUrl = '';
+  let inputNotes = '';
+  let inputTags = ['reads'];
+
+  if (fromIssue) {
+    const parsed = parseIssueBody(process.env.ISSUE_BODY || '', process.env.ISSUE_TITLE || '');
+    inputUrl = parsed.url;
+    inputNotes = parsed.notes;
+    inputTags = parsed.tags;
+  } else {
+    inputUrl = filteredArgs[0];
+    inputNotes = filteredArgs[1] || '';
+    inputTags = filteredArgs[2]
+      ? filteredArgs[2].split(',').map((t) => t.trim()).filter(Boolean)
+      : ['reads'];
+  }
+
+  if (!inputUrl) {
+    console.error(`[!] Error: No URL found to scrape.`);
+    process.exit(1);
+  }
 
   try {
     new URL(inputUrl);
@@ -153,9 +199,18 @@ async function main() {
   console.log(`    File: src/content/links/${filename}`);
   console.log(`    Title: ${title}`);
   console.log(`    Tags: [${inputTags.join(', ')}]`);
+
+  if (process.env.GITHUB_OUTPUT) {
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `slug=${slug}\n`);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `title=${title.replace(/[\r\n]+/g, ' ')}\n`);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `filename=${filename}\n`);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `url=${inputUrl}\n`);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `tags=${inputTags.join(', ')}\n`);
+  }
 }
 
 // Only execute if called directly from CLI
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   main();
 }
+
