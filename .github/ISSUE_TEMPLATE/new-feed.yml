@@ -16,11 +16,11 @@ body:
     validations:
       required: true
   - type: input
-    id: category
+    id: tags
     attributes:
-      label: Category
-      description: Category for grouping (e.g. engineering, essays, watches, ai, systems).
-      placeholder: "watches"
+      label: Tags
+      description: Comma-separated tags (e.g. stats, modeling, ai, systems).
+      placeholder: "stats, modeling"
     validations:
       required: false
   - type: input

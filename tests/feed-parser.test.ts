@@ -7,6 +7,11 @@ describe('Feed Parser', () => {
     expect(cleanText(raw)).toBe("Hello & World <> \"'");
   });
 
+  it('strips escaped HTML tags inside feed content/description', () => {
+    const raw = '&lt;p&gt;Yesterday was &lt;a href="https://x.ai/news/grok-4-7"&gt;Grok 4.7&lt;/a&gt; (&lt;a href="https://news.ycombinator.com/item?id=49788838#49790209"&gt;pelicans&lt;/a&gt;) and &lt;a href="https://mimo.xiaomi.com/mimo-v2-6"&gt;MiMo&lt;/a&gt;&lt;/p&gt;';
+    expect(cleanText(raw)).toBe('Yesterday was Grok 4.7 (pelicans) and MiMo');
+  });
+
   it('parses standard RSS 2.0 XML correctly', () => {
     const mockRss = `
       <?xml version="1.0" encoding="UTF-8"?>

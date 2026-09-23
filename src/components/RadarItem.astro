@@ -7,9 +7,11 @@ interface Props {
 
 const { item } = Astro.props;
 const formattedDate = item.pubDate.toISOString().slice(0, 10);
+const tags = (item.sourceTags && item.sourceTags.length > 0 ? item.sourceTags : [item.sourceCategory]).filter(Boolean);
+const tagAttribute = tags.join(',');
 ---
 
-<article class="radar-item" data-source={item.sourceName.toLowerCase()}>
+<article class="radar-item" data-source={item.sourceName.toLowerCase()} data-tags={tagAttribute}>
   <div class="radar-header">
     <div class="radar-title-group">
       <span class="radar-source-tag">[{item.sourceName.toUpperCase()}]</span>
@@ -27,7 +29,11 @@ const formattedDate = item.pubDate.toISOString().slice(0, 10);
   )}
 
   <div class="radar-footer">
-    <span class="category-meta">#{item.sourceCategory}</span>
+    <div class="radar-tag-group">
+      {(item.sourceTags && item.sourceTags.length > 0 ? item.sourceTags : [item.sourceCategory]).filter(Boolean).map((t) => (
+        <span class="category-meta">#{t}</span>
+      ))}
+    </div>
     <div class="radar-actions">
       <button
         class="radar-curate-btn"
@@ -112,6 +118,12 @@ const formattedDate = item.pubDate.toISOString().slice(0, 10);
     font-size: 11px;
     padding-top: 6px;
     border-top: 1px dotted var(--border-subtle);
+  }
+
+  .radar-tag-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   .category-meta {

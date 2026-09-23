@@ -42,7 +42,9 @@ const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
             <a href={feed.site || feed.url} target="_blank" rel="noopener noreferrer" class="feed-name-link">
               {feed.name}
             </a>
-            <span class="feed-category-badge">#{feed.category}</span>
+            {(feed.tags || ['blogs']).map((t: string) => (
+              <span class="feed-category-badge">#{t}</span>
+            ))}
           </div>
           {feed.description && (
             <p class="feed-description">{feed.description}</p>

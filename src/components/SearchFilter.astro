@@ -111,10 +111,13 @@ const {
 
       items.forEach((item) => {
         const text = item.innerText.toLowerCase();
-        const itemTags = (item.getAttribute('data-tags') || '').split(',');
+        const itemTags = (item.getAttribute('data-tags') || '')
+          .split(',')
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean);
 
         const matchesQuery = !query || text.includes(query);
-        const matchesTag = activeTag === 'all' || itemTags.includes(activeTag);
+        const matchesTag = activeTag === 'all' || itemTags.includes(activeTag.toLowerCase());
 
         if (matchesQuery && matchesTag) {
           item.style.display = '';

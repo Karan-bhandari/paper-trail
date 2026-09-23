@@ -11,8 +11,10 @@ export async function GET() {
 
   const outlines = feeds
     .map(
-      (f) =>
-        `    <outline text="${xmlEntities(f.name)}" title="${xmlEntities(f.name)}" type="rss" xmlUrl="${xmlEntities(f.url)}" htmlUrl="${xmlEntities(f.site || f.url)}" category="${xmlEntities(f.category || 'general')}" />`
+      (f: any) => {
+        const cat = f.tags && f.tags.length > 0 ? f.tags.join(', ') : (f.category || 'general');
+        return `    <outline text="${xmlEntities(f.name)}" title="${xmlEntities(f.name)}" type="rss" xmlUrl="${xmlEntities(f.url)}" htmlUrl="${xmlEntities(f.site || f.url)}" category="${xmlEntities(cat)}" />`;
+      }
     )
     .join('\n');
 

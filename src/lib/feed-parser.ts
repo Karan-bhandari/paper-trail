@@ -4,6 +4,7 @@ export interface FeedItem {
   pubDate: Date;
   sourceName: string;
   sourceCategory: string;
+  sourceTags: string[];
   snippet: string;
 }
 
@@ -11,29 +12,63 @@ export interface FeedSource {
   name: string;
   url: string;
   site?: string;
-  category: string;
+  tags?: string[];
+  category?: string;
   description?: string;
 }
 
-// Helper to strip HTML tags and decode common XML entities
+// Helper to resolve tags and category string from FeedSource
+export function resolveSourceTags(source: FeedSource): { tags: string[]; category: string } {
+  const tags =
+    source.tags && source.tags.length > 0
+      ? source.tags
+      : source.category
+        ? source.category.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+        : ['blogs'];
+  const category = tags.join(', ');
+  return { tags, category };
+}
+
+// Helper to strip HTML tags and decode common XML/HTML entities
 export function cleanText(raw: string): string {
   if (!raw) return '';
-  return raw
+  let text = raw
     .replace(/<!\[CDATA\[(.*?)\]\]>/gs, '$1')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&')
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
+  // 1. Decode entities first so escaped markup (like &lt;p&gt; or &lt;a href="..."&gt;) becomes real HTML
+  text = text
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
+    .replace(/&#39;|&apos;|&#x27;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#8217;|&#8216;/g, "'")
+    .replace(/&#8220;|&#8221;/g, '"')
+    .replace(/&#8211;|&#8212;/g, '-');
+
+  // 2. Strip all HTML tags
+  text = text.replace(/<[^>]+>/g, '');
+
+  // 3. Decode any leftover entities and clean whitespace
+  text = text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;|&#x27;/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
+
+  return text;
 }
 
 // Parses an XML string into FeedItem array (supports RSS 2.0 and Atom 1.0)
 export function parseXmlFeed(xml: string, source: FeedSource, limit = 5): FeedItem[] {
   const items: FeedItem[] = [];
+  const { tags: sourceTags, category: sourceCategory } = resolveSourceTags(source);
 
   // 1. Check for Atom 1.0 (<entry>)
   const isAtom = xml.includes('<entry');
@@ -58,7 +93,7 @@ export function parseXmlFeed(xml: string, source: FeedSource, limit = 5): FeedIt
       const dateMatch = entryXml.match(/<(?:published|updated)[^>]*>(.*?)<\/(?:published|updated)>/s);
       const pubDate = dateMatch ? new Date(cleanText(dateMatch[1])) : new Date();
 
-      // Summary or content
+      // Snippet: <summary> or <content>
       const summaryMatch = entryXml.match(/<(?:summary|content)[^>]*>(.*?)<\/(?:summary|content)>/s);
       const snippet = summaryMatch ? cleanText(summaryMatch[1]).slice(0, 200) : '';
 
@@ -68,7 +103,8 @@ export function parseXmlFeed(xml: string, source: FeedSource, limit = 5): FeedIt
           link,
           pubDate: isNaN(pubDate.getTime()) ? new Date() : pubDate,
           sourceName: source.name,
-          sourceCategory: source.category,
+          sourceCategory,
+          sourceTags,
           snippet,
         });
       }
@@ -97,7 +133,8 @@ export function parseXmlFeed(xml: string, source: FeedSource, limit = 5): FeedIt
         link,
         pubDate: isNaN(pubDate.getTime()) ? new Date() : pubDate,
         sourceName: source.name,
-        sourceCategory: source.category,
+        sourceCategory,
+        sourceTags,
         snippet,
       });
     }

@@ -13,7 +13,8 @@ describe('Data Integrity', () => {
     for (const feed of feeds) {
       expect(feed.name).toBeTruthy();
       expect(feed.url).toMatch(/^https?:\/\//);
-      expect(feed.category).toBeTruthy();
+      expect(Array.isArray(feed.tags)).toBe(true);
+      expect(feed.tags.length).toBeGreaterThan(0);
     }
   });
 
