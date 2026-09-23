@@ -41,6 +41,10 @@ Preview frontmatter without writing to disk:
 npm run add "https://example.com" --test
 ```
 
+### Mobile (GitHub Issue)
+
+Open a **New Dispatch** issue on GitHub. An automated workflow scrapes metadata, creates a branch, and opens a Pull Request for 1-tap mobile review and merge.
+
 ### Manual
 
 Add a markdown file to `src/content/links/`:

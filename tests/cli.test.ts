@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { slugify, generateMarkdown } from '../scripts/add-link.mjs';
+import { slugify, generateMarkdown, parseIssueBody } from '../scripts/add-link.mjs';
 
 describe('CLI Link Helper', () => {
   it('slugifies titles properly', () => {
@@ -30,4 +30,51 @@ describe('CLI Link Helper', () => {
     expect(md).toContain('via: "hn"');
     expect(md).toContain('This is a test note.');
   });
+
+  it('parses GitHub Issue Form body correctly', () => {
+    const issueBody = `
+### URL
+
+https://fly.io/blog/all-in-on-sqlite/
+
+### Tags
+
+systems, databases
+
+### Notes / Takeaway
+
+Great deep dive into edge databases.
+`;
+    const parsed = parseIssueBody(issueBody);
+    expect(parsed.url).toBe('https://fly.io/blog/all-in-on-sqlite/');
+    expect(parsed.tags).toEqual(['systems', 'databases']);
+    expect(parsed.notes).toBe('Great deep dive into edge databases.');
+  });
+
+  it('handles empty/placeholder issue form values gracefully', () => {
+    const issueBody = `
+### URL
+
+https://example.com
+
+### Tags
+
+_No response_
+
+### Notes / Takeaway
+
+_No response_
+`;
+    const parsed = parseIssueBody(issueBody);
+    expect(parsed.url).toBe('https://example.com');
+    expect(parsed.tags).toEqual(['reads']);
+    expect(parsed.notes).toBe('');
+  });
+
+  it('falls back to raw URL in title or body when not using form', () => {
+    const parsed = parseIssueBody('Check this out: https://simonwillison.net/2026/til', 'Dispatch: new link');
+    expect(parsed.url).toBe('https://simonwillison.net/2026/til');
+    expect(parsed.tags).toEqual(['reads']);
+  });
 });
+
