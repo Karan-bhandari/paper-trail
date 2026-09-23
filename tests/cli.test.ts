@@ -100,9 +100,30 @@ Independent watch reviews and guides.
 `;
     const parsed = parseFeedIssueBody(issueBody);
     expect(parsed.url).toBe('https://wornandwound.com/feed/');
+    expect(parsed.tags).toEqual(['watches']);
     expect(parsed.category).toBe('watches');
     expect(parsed.name).toBe('Worn & Wound');
     expect(parsed.description).toBe('Independent watch reviews and guides.');
+  });
+
+  it('parses multi-tag Feed Issue Form body correctly', () => {
+    const issueBody = `
+### Feed URL
+
+https://www.fharrell.com/index.xml
+
+### Tags
+
+stats, modeling
+
+### Publication / Site Name
+
+Statistical Thinking
+`;
+    const parsed = parseFeedIssueBody(issueBody);
+    expect(parsed.url).toBe('https://www.fharrell.com/index.xml');
+    expect(parsed.tags).toEqual(['stats', 'modeling']);
+    expect(parsed.name).toBe('Statistical Thinking');
   });
 
   it('extracts metadata from RSS channel XML', () => {

@@ -10,17 +10,34 @@ const FEEDS_FILE = path.resolve(__dirname, '../src/data/feeds.json');
 // Helper to decode basic XML entities & strip tags
 export function cleanText(raw) {
   if (!raw) return '';
-  return raw
+  let text = raw
     .replace(/<!\[CDATA\[(.*?)\]\]>/gs, '$1')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&')
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
+  text = text
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
+    .replace(/&#39;|&apos;|&#x27;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#8217;|&#8216;/g, "'")
+    .replace(/&#8220;|&#8221;/g, '"')
+    .replace(/&#8211;|&#8212;/g, '-');
+
+  text = text.replace(/<[^>]+>/g, '');
+
+  text = text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;|&#x27;/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
+
+  return text;
 }
 
 // Slugify string for branch and identifier
@@ -37,12 +54,12 @@ export function slugify(text) {
 export function parseFeedIssueBody(body = '', title = '') {
   const urlMatch = body.match(/###\s*(?:Feed\s*)?URL\s*\n+([^\n#]+)/i);
   const nameMatch = body.match(/###\s*.*?Name\s*\n+([^\n#]+)/i);
-  const catMatch = body.match(/###\s*Category\s*\n+([^\n#]+)/i);
+  const tagMatch = body.match(/###\s*(?:Tags|Category)\s*\n+([^\n#]+)/i);
   const descMatch = body.match(/###\s*Description\s*\n+([\s\S]*?)(?:###|$)/i);
 
   let url = urlMatch ? urlMatch[1].trim() : '';
   let name = nameMatch ? nameMatch[1].trim() : '';
-  let category = catMatch ? catMatch[1].trim() : 'blogs';
+  let tagString = tagMatch ? tagMatch[1].trim() : 'blogs';
   let description = descMatch ? descMatch[1].trim() : '';
 
   if (!url || url.toLowerCase() === '_no response_') {
@@ -53,10 +70,23 @@ export function parseFeedIssueBody(body = '', title = '') {
   url = url.replace(/^[<(\[]+|[>)\]]+$/g, '').trim();
 
   if (name.toLowerCase() === '_no response_') name = '';
-  if (category.toLowerCase() === '_no response_') category = 'blogs';
+  if (tagString.toLowerCase() === '_no response_') tagString = 'blogs';
   if (description.toLowerCase() === '_no response_') description = '';
 
-  return { url, name, category, description };
+  const tags = tagString
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+
+  const finalTags = tags.length > 0 ? tags : ['blogs'];
+
+  return {
+    url,
+    name,
+    tags: finalTags,
+    category: finalTags.join(', '),
+    description,
+  };
 }
 
 // Extracts feed title, site, and description from raw RSS/Atom XML
@@ -164,19 +194,21 @@ async function main() {
   const filteredArgs = args.filter((a) => !a.startsWith('--'));
 
   let inputUrl = '';
-  let inputCategory = 'blogs';
+  let inputTags = ['blogs'];
   let inputName = '';
   let inputDesc = '';
 
   if (fromIssue) {
     const parsed = parseFeedIssueBody(process.env.ISSUE_BODY || '', process.env.ISSUE_TITLE || '');
     inputUrl = parsed.url;
-    inputCategory = parsed.category || 'blogs';
+    inputTags = parsed.tags;
     inputName = parsed.name;
     inputDesc = parsed.description;
   } else {
     inputUrl = filteredArgs[0];
-    inputCategory = filteredArgs[1] || 'blogs';
+    inputTags = filteredArgs[1]
+      ? filteredArgs[1].split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+      : ['blogs'];
     inputName = filteredArgs[2] || '';
     inputDesc = filteredArgs[3] || '';
   }
@@ -229,7 +261,7 @@ async function main() {
     name: finalName,
     url: inputUrl,
     site: finalSite,
-    category: inputCategory.toLowerCase(),
+    tags: inputTags,
     description: finalDesc,
   };
 
@@ -246,7 +278,7 @@ async function main() {
   console.log(`    Name: ${finalName}`);
   console.log(`    URL: ${inputUrl}`);
   console.log(`    Site: ${finalSite}`);
-  console.log(`    Category: ${inputCategory}`);
+  console.log(`    Tags: [${inputTags.join(', ')}]`);
 
   if (fromIssue) {
     const prBody = `Closes #${process.env.ISSUE_NUMBER || ''}
@@ -255,7 +287,7 @@ async function main() {
 - **Name**: ${finalName}
 - **Feed URL**: ${inputUrl}
 - **Website**: ${finalSite}
-- **Category**: \`${inputCategory}\`
+- **Tags**: \`${inputTags.join(', ')}\`
 - **Description**: ${finalDesc}
 
 *Generated from issue #${process.env.ISSUE_NUMBER || ''}. Merge to add to /radar.*
@@ -267,7 +299,7 @@ async function main() {
     fs.appendFileSync(process.env.GITHUB_OUTPUT, `slug=${slug}\n`);
     fs.appendFileSync(process.env.GITHUB_OUTPUT, `name=${finalName.replace(/[\r\n]+/g, ' ')}\n`);
     fs.appendFileSync(process.env.GITHUB_OUTPUT, `url=${inputUrl}\n`);
-    fs.appendFileSync(process.env.GITHUB_OUTPUT, `category=${inputCategory}\n`);
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `tags=${inputTags.join(', ')}\n`);
   }
 }
 
