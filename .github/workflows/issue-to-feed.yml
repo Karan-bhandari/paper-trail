@@ -1,4 +1,4 @@
-name: Create Dispatch from Issue
+name: Add Feed from Issue
 
 on:
   issues:
@@ -10,9 +10,9 @@ permissions:
   issues: write
 
 jobs:
-  create-dispatch-pr:
+  create-feed-pr:
     # Security: Strictly restrict execution to the repository owner
-    if: github.actor == github.repository_owner && (contains(github.event.issue.labels.*.name, 'dispatch') || startsWith(github.event.issue.title, 'Dispatch:'))
+    if: github.actor == github.repository_owner && (contains(github.event.issue.labels.*.name, 'feed') || startsWith(github.event.issue.title, 'Feed:'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -23,14 +23,18 @@ jobs:
         with:
           node-version: 20
 
-      - name: Scrape Metadata & Generate Dispatch
-        id: dispatch
+      - name: Validate Feed & Update Feeds List
+        id: feed
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          node scripts/add-link.mjs --from-issue
+          node scripts/add-feed.mjs --from-issue
+
+      - name: Verify Data Schema
+        run: |
+          npm test
 
       - name: Commit and Open Pull Request
         env:
@@ -39,16 +43,16 @@ jobs:
           git config user.name "Karan Bhandari"
           git config user.email "30714687+Karan-bhandari@users.noreply.github.com"
 
-          BRANCH="dispatch/${{ steps.dispatch.outputs.slug }}"
+          BRANCH="feed/${{ steps.feed.outputs.slug }}"
           git checkout -b "$BRANCH"
-          git add src/content/links/
-          git commit -m "content: add dispatch '${{ steps.dispatch.outputs.title }}'"
+          git add src/data/feeds.json
+          git commit -m "content: add feed '${{ steps.feed.outputs.name }}'"
           git push -u origin "$BRANCH"
 
           PR_URL=$(gh pr create \
-            --title "Dispatch: ${{ steps.dispatch.outputs.title }}" \
+            --title "Feed: ${{ steps.feed.outputs.name }}" \
             --body-file /tmp/pr-body.txt \
             --head "$BRANCH" \
             --base main)
 
-          gh issue comment ${{ github.event.issue.number }} --body "Created Pull Request: $PR_URL - Review and tap **Merge pull request** to publish to Paper Trail."
+          gh issue comment ${{ github.event.issue.number }} --body "Created Pull Request: $PR_URL - Review and tap **Merge pull request** to add this feed to Paper Trail."

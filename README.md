@@ -64,7 +64,21 @@ Notes go here.
 
 ## Configuring Feeds
 
-Add RSS, Atom, or Substack feeds to `src/data/feeds.json`:
+### CLI
+
+Verify and add an RSS or Atom feed automatically:
+
+```bash
+npm run add:feed "https://wornandwound.com/feed/" "watches"
+```
+
+### Mobile (GitHub Issue)
+
+Open a **New RSS Feed** issue on GitHub. An automated workflow validates the feed, updates `src/data/feeds.json`, and opens a Pull Request.
+
+### Manual
+
+Add an entry to `src/data/feeds.json`:
 
 ```json
 [

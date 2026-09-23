@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { slugify, generateMarkdown, parseIssueBody } from '../scripts/add-link.mjs';
+import { parseFeedIssueBody, extractFeedMetadata } from '../scripts/add-feed.mjs';
 
 describe('CLI Link Helper', () => {
   it('slugifies titles properly', () => {
@@ -77,4 +78,48 @@ _No response_
     expect(parsed.tags).toEqual(['reads']);
   });
 });
+
+describe('CLI Feed Helper', () => {
+  it('parses Feed Issue Form body correctly', () => {
+    const issueBody = `
+### Feed URL
+
+https://wornandwound.com/feed/
+
+### Category
+
+watches
+
+### Publication / Site Name
+
+Worn & Wound
+
+### Description
+
+Independent watch reviews and guides.
+`;
+    const parsed = parseFeedIssueBody(issueBody);
+    expect(parsed.url).toBe('https://wornandwound.com/feed/');
+    expect(parsed.category).toBe('watches');
+    expect(parsed.name).toBe('Worn & Wound');
+    expect(parsed.description).toBe('Independent watch reviews and guides.');
+  });
+
+  it('extracts metadata from RSS channel XML', () => {
+    const xml = `
+      <rss version="2.0">
+        <channel>
+          <title>Test Watch Blog</title>
+          <link>https://watchblog.example.com</link>
+          <description>Horology and watchmaking.</description>
+        </channel>
+      </rss>
+    `;
+    const meta = extractFeedMetadata(xml, 'https://watchblog.example.com/rss.xml');
+    expect(meta.name).toBe('Test Watch Blog');
+    expect(meta.site).toBe('https://watchblog.example.com');
+    expect(meta.description).toBe('Horology and watchmaking.');
+  });
+});
+
 

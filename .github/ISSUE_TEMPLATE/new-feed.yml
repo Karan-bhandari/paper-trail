@@ -1,0 +1,41 @@
+name: New RSS Feed
+description: Follow a new RSS or Atom feed on The Radar
+title: "Feed: "
+labels: ["feed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Submit an RSS or Atom feed URL to add it to The Radar (/radar) and blogroll (/feeds).
+  - type: input
+    id: url
+    attributes:
+      label: Feed URL
+      description: The full URL to the RSS or Atom feed.
+      placeholder: "https://example.com/feed.xml"
+    validations:
+      required: true
+  - type: input
+    id: category
+    attributes:
+      label: Category
+      description: Category for grouping (e.g. engineering, essays, watches, ai, systems).
+      placeholder: "watches"
+    validations:
+      required: false
+  - type: input
+    id: name
+    attributes:
+      label: Publication / Site Name
+      description: Optional. Auto-detected from feed XML if left blank.
+      placeholder: "Worn & Wound"
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Optional brief summary of what this feed covers.
+      placeholder: "Independent watch reviews and guides..."
+    validations:
+      required: false
