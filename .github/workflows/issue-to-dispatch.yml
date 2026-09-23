@@ -2,7 +2,7 @@ name: Create Dispatch from Issue
 
 on:
   issues:
-    types: [opened]
+    types: [opened, reopened]
 
 permissions:
   contents: write
@@ -28,6 +28,7 @@ jobs:
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           node scripts/add-link.mjs --from-issue
 
@@ -46,15 +47,7 @@ jobs:
 
           PR_URL=$(gh pr create \
             --title "Dispatch: ${{ steps.dispatch.outputs.title }}" \
-            --body "Closes #${{ github.event.issue.number }}
-
-### Dispatch Preview
-- **Title**: ${{ steps.dispatch.outputs.title }}
-- **URL**: ${{ steps.dispatch.outputs.url }}
-- **Tags**: \`${{ steps.dispatch.outputs.tags }}\`
-- **File**: \`src/content/links/${{ steps.dispatch.outputs.filename }}\`
-
-*Generated from issue #${{ github.event.issue.number }}. Merge to publish live.*" \
+            --body-file /tmp/pr-body.txt \
             --head "$BRANCH" \
             --base main)
 
