@@ -200,6 +200,20 @@ async function main() {
   console.log(`    Title: ${title}`);
   console.log(`    Tags: [${inputTags.join(', ')}]`);
 
+  if (fromIssue) {
+    const prBody = `Closes #${process.env.ISSUE_NUMBER || ''}
+
+### Dispatch Preview
+- **Title**: ${title}
+- **URL**: ${inputUrl}
+- **Tags**: \`${inputTags.join(', ')}\`
+- **File**: \`src/content/links/${filename}\`
+
+*Generated from issue #${process.env.ISSUE_NUMBER || ''}. Merge to publish live.*
+`;
+    fs.writeFileSync('/tmp/pr-body.txt', prBody, 'utf8');
+  }
+
   if (process.env.GITHUB_OUTPUT) {
     fs.appendFileSync(process.env.GITHUB_OUTPUT, `slug=${slug}\n`);
     fs.appendFileSync(process.env.GITHUB_OUTPUT, `title=${title.replace(/[\r\n]+/g, ' ')}\n`);
