@@ -6,7 +6,7 @@ interface Props {
 }
 
 const {
-  placeholder = 'grep -i "query" items...',
+  placeholder = 'Search by keyword, tag, or topic...',
   targetSelector = '.curated-link-card',
   tags = [],
 } = Astro.props;
@@ -17,7 +17,7 @@ const {
     type="search"
     class="grep-input-field"
     placeholder={placeholder}
-    aria-label="Filter links"
+    aria-label="Search filter"
   />
 
   {tags.length > 0 && (
