@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  # Refresh The Radar every 2 hours
+  # Refresh The Radar news feeds every 2 hours
   schedule:
     - cron: '0 */2 * * *'
   # Allow manual trigger from the GitHub Actions tab
@@ -43,6 +43,16 @@ jobs:
 
       - name: Verify TypeScript & Astro types
         run: npm run check
+
+      - name: Fetch rocket launches from LL2 (Every 6 hours)
+        run: |
+          HOUR=$(date -u +%H)
+          if [ "${{ github.event_name }}" != "schedule" ] || [ $(( 10#$HOUR % 6 )) -eq 0 ]; then
+            echo "[github-actions] Triggering 6-hour Launch Radar update (UTC Hour: $HOUR)..."
+            npm run update:launches
+          else
+            echo "[github-actions] Skipping Launch Radar update (UTC Hour: $HOUR). Using cached snapshot."
+          fi
 
       - name: Build static site & feeds
         run: npm run build

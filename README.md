@@ -12,6 +12,7 @@ A personal link log, RSS aggregator, and blogroll built with Astro.
 - `/`: Curated links with search and tag filters
 - `/radar`: Automated RSS stream from followed blogs
 - `/feeds`: Directory of followed sources with OPML export
+- `/launches`: Global rocket launch telemetry, pad maps, and live countdowns
 - `/rss.xml`: Outbound RSS 2.0 feed
 - `/feeds.opml`: OPML export of followed feeds
 
@@ -96,6 +97,6 @@ Feeds are polled at build time to generate `/radar`.
 
 ## Deployment
 
-Pushes to `main` trigger `.github/workflows/deploy.yml` to build and deploy to GitHub Pages via GitHub Actions. A scheduled cron every 2 hours rebuilds the site to keep `/radar` updated.
+Pushes to `main` trigger `.github/workflows/deploy.yml` to build and deploy to GitHub Pages via GitHub Actions. A scheduled cron every 2 hours rebuilds the site to keep `/radar` updated, while `/launches` telemetry refreshes every 6 hours.
 
 
