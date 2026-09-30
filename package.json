@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "add": "node scripts/add-link.mjs",
-    "add:feed": "node scripts/add-feed.mjs"
+    "add:feed": "node scripts/add-feed.mjs",
+    "update:launches": "node scripts/fetch-launches.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",

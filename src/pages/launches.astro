@@ -1,0 +1,319 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LaunchCard from '../components/LaunchCard.astro';
+import SearchFilter from '../components/SearchFilter.astro';
+import launchesData from '../data/launches.json';
+
+const upcoming = launchesData.upcoming || launchesData.launches || [];
+const previous = launchesData.previous || [];
+const nextLaunch = upcoming[0] || null;
+
+// Collect unique payload tags across both sets for filter buttons
+const uniqueTags = Array.from(
+  new Set([...upcoming, ...previous].map((l) => l.payloadTag.tag.toLowerCase()))
+).sort();
+
+const lastUpdatedStr = launchesData.updatedAt
+  ? new Date(launchesData.updatedAt).toISOString().slice(0, 16).replace('T', ' ') + ' UTC'
+  : 'Recently';
+---
+
+<BaseLayout
+  title="LAUNCH_RADAR // Global Rocket Telemetry & Mission Feed"
+  description="Upcoming and completed orbital and suborbital rocket launches tracked worldwide, with local pad times, payloads, and live countdowns."
+  activeTab="launches"
+>
+  <!-- INTRO TELEMETRY BANNER -->
+  <div class="launches-intro-box">
+    <p>
+      <strong>LAUNCH RADAR</strong> tracks global spaceflight operations across commercial, civil, and defense providers.
+      Powered by <em>Launch Library 2</em> with payload metadata, launch pad coordinates, and dual local timezones.
+    </p>
+    <div class="launches-stats-bar">
+      <span>NEXT_UP: <strong>{nextLaunch ? `${nextLaunch.rocket.name} (${nextLaunch.mission.name})` : 'NONE'}</strong></span>
+      <span>MANIFEST: <strong>{upcoming.length} UPCOMING</strong> &bull; <strong>{previous.length} COMPLETED</strong></span>
+      <span>SNAPSHOT: <strong>{lastUpdatedStr}</strong></span>
+    </div>
+  </div>
+
+  <!-- SEARCH & TAG FILTER -->
+  <SearchFilter
+    placeholder="Search launches by rocket, provider, payload, or site (e.g. SpaceX, Crew, Starship)..."
+    targetSelector=".launch-card:not(.hidden-by-view)"
+    tags={uniqueTags}
+  />
+
+  <!-- BRUTALIST TIMELINE NAVIGATION TABS -->
+  <div class="timeline-tabs-bar">
+    <div class="timeline-tabs" role="tablist" aria-label="Launch Timeline Views">
+      <button
+        type="button"
+        role="tab"
+        aria-selected="true"
+        class="timeline-tab-btn active"
+        id="btnShowUpcoming"
+        data-target-view="upcoming"
+      >
+        [1. UPCOMING LAUNCHES &bull; {upcoming.length}]
+      </button>
+
+      <button
+        type="button"
+        role="tab"
+        aria-selected="false"
+        class="timeline-tab-btn"
+        id="btnShowPrevious"
+        data-target-view="previous"
+      >
+        [2. RECENTLY LAUNCHED &bull; {previous.length}]
+      </button>
+    </div>
+
+    <div class="timeline-manifest-info" id="viewStatusLabel">
+      // NEXT 90+ DAYS &bull; UPCOMING
+    </div>
+  </div>
+
+  <!-- UPCOMING LAUNCH STREAM (Chronological: Nearest First) -->
+  <main class="launches-stream" id="upcomingSection">
+    {upcoming.length > 0 ? (
+      upcoming.map((launch) => <LaunchCard launch={launch} />)
+    ) : (
+      <div class="launches-empty-notice">
+        <p>[!] No upcoming launches cached.</p>
+        <p>Run <code>npm run update:launches</code> to pull the latest snapshot from Launch Library 2.</p>
+      </div>
+    )}
+  </main>
+
+  <!-- RECENTLY LAUNCHED STREAM (Reverse Chronological: Most Recent First) -->
+  <section class="launches-stream" id="previousSection" style="display: none;">
+    {previous.length > 0 ? (
+      previous.map((launch) => <LaunchCard launch={launch} />)
+    ) : (
+      <div class="launches-empty-notice">
+        <p>[!] No past launches cached.</p>
+        <p>Run <code>npm run update:launches</code> to pull the latest history from Launch Library 2.</p>
+      </div>
+    )}
+  </section>
+</BaseLayout>
+
+<style>
+  .launches-intro-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .launches-stats-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-subtle);
+    font-size: 11.5px;
+  }
+
+  /* Brutalist Timeline Navigation Tabs */
+  .timeline-tabs-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 26px 0 18px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+  }
+
+  .timeline-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .timeline-tab-btn {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 7px 14px;
+    cursor: pointer;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.12s ease, color 0.12s ease;
+    user-select: none;
+  }
+
+  :root[data-mode="light"] .timeline-tab-btn {
+    background: #EFEFEF;
+    color: #000000;
+    border: 1px solid #000000;
+  }
+
+  :root[data-mode="light"] .timeline-tab-btn:hover {
+    background: #E0E0E0;
+  }
+
+  :root[data-mode="light"] .timeline-tab-btn.active {
+    background: #000000;
+    color: #FFFFFF;
+    border: 1px solid #000000;
+  }
+
+  :root[data-mode="dark"] .timeline-tab-btn {
+    background: #1C1C1C;
+    color: #E0E0E0;
+    border: 1px solid #555555;
+  }
+
+  :root[data-mode="dark"] .timeline-tab-btn:hover {
+    background: #282828;
+    color: #FFFFFF;
+  }
+
+  :root[data-mode="dark"] .timeline-tab-btn.active {
+    background: #FFFFFF;
+    color: #000000;
+    border: 1px solid #FFFFFF;
+  }
+
+  .timeline-manifest-info {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .launches-empty-notice {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+</style>
+
+<script is:inline>
+  // Toggle between Upcoming and Recently Launched views
+  const btnUpcoming = document.getElementById('btnShowUpcoming');
+  const btnPrevious = document.getElementById('btnShowPrevious');
+  const upcomingSec = document.getElementById('upcomingSection');
+  const previousSec = document.getElementById('previousSection');
+  const statusLabel = document.getElementById('viewStatusLabel');
+
+  function switchView(mode) {
+    if (mode === 'previous') {
+      btnUpcoming?.classList.remove('active');
+      btnUpcoming?.setAttribute('aria-selected', 'false');
+      btnPrevious?.classList.add('active');
+      btnPrevious?.setAttribute('aria-selected', 'true');
+
+      if (upcomingSec) upcomingSec.style.display = 'none';
+      if (previousSec) previousSec.style.display = 'block';
+      if (statusLabel) statusLabel.textContent = '// RECENT FLIGHT OUTCOMES';
+
+      // Update target visibility for search filter
+      upcomingSec?.querySelectorAll('.launch-card').forEach((c) => c.classList.add('hidden-by-view'));
+      previousSec?.querySelectorAll('.launch-card').forEach((c) => c.classList.remove('hidden-by-view'));
+    } else {
+      btnPrevious?.classList.remove('active');
+      btnPrevious?.setAttribute('aria-selected', 'false');
+      btnUpcoming?.classList.add('active');
+      btnUpcoming?.setAttribute('aria-selected', 'true');
+
+      if (previousSec) previousSec.style.display = 'none';
+      if (upcomingSec) upcomingSec.style.display = 'block';
+      if (statusLabel) statusLabel.textContent = '// NEXT 90+ DAYS • UPCOMING';
+
+      previousSec?.querySelectorAll('.launch-card').forEach((c) => c.classList.add('hidden-by-view'));
+      upcomingSec?.querySelectorAll('.launch-card').forEach((c) => c.classList.remove('hidden-by-view'));
+    }
+
+    // Trigger existing grep input to refresh matches in newly visible section
+    const grepInput = document.querySelector('.grep-input-field');
+    if (grepInput) {
+      grepInput.dispatchEvent(new Event('input'));
+    }
+  }
+
+  btnUpcoming?.addEventListener('click', () => switchView('upcoming'));
+  btnPrevious?.addEventListener('click', () => switchView('previous'));
+
+  // Initialize hidden classes
+  previousSec?.querySelectorAll('.launch-card').forEach((c) => c.classList.add('hidden-by-view'));
+
+  // Hydrate client local times and run live T-minus countdowns
+  function formatClientLocalTimes() {
+    const timeElements = document.querySelectorAll('.client-local-time');
+    const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
+
+    timeElements.forEach((el) => {
+      const net = el.getAttribute('data-net');
+      if (!net) return;
+      const d = new Date(net);
+      if (isNaN(d.getTime())) return;
+
+      const formatted = new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short',
+      }).format(d);
+
+      el.innerHTML = `<strong>${formatted}</strong> <span class="tz-subtle">(${userTz})</span>`;
+    });
+  }
+
+  function updateCountdowns() {
+    const countdownEls = document.querySelectorAll('[data-countdown-net]');
+    const now = Date.now();
+
+    countdownEls.forEach((el) => {
+      const netStr = el.getAttribute('data-countdown-net');
+      if (!netStr) return;
+      const targetTime = new Date(netStr).getTime();
+      if (isNaN(targetTime)) {
+        el.textContent = 'TIME_TBD';
+        return;
+      }
+
+      const diff = targetTime - now;
+      const isPast = diff < 0;
+      const absDiff = Math.abs(diff);
+
+      const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((absDiff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((absDiff / (1000 * 60)) % 60);
+      const seconds = Math.floor((absDiff / 1000) % 60);
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const timeString = `${days > 0 ? `${days}d ` : ''}${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+
+      if (isPast) {
+        el.textContent = `T+ ${timeString}`;
+      } else {
+        el.textContent = `T- ${timeString}`;
+      }
+    });
+  }
+
+  // Run on page load
+  formatClientLocalTimes();
+  updateCountdowns();
+  setInterval(updateCountdowns, 1000);
+</script>

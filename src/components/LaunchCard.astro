@@ -1,0 +1,474 @@
+---
+export interface LaunchItem {
+  id: string;
+  name: string;
+  isPast?: boolean;
+  status: {
+    id?: number;
+    name: string;
+    abbrev: string;
+    description: string;
+  };
+  net: string;
+  windowStart: string;
+  windowEnd: string;
+  rocket: {
+    name: string;
+    family: string;
+  };
+  agency: {
+    name: string;
+    type: string;
+  };
+  pad: {
+    name: string;
+    location: string;
+    country: string;
+    latitude: number | null;
+    longitude: number | null;
+    timezone: string;
+  };
+  mission: {
+    name: string;
+    type: string;
+    description: string;
+    orbit: string;
+  };
+  payloadTag: {
+    tag: string;
+    label: string;
+    icon: string;
+  };
+  image: string | null;
+  webcastUrl: string | null;
+  fetchedAt: string;
+}
+
+interface Props {
+  launch: LaunchItem;
+}
+
+const { launch } = Astro.props;
+
+// Format pad local time using the pad's native timezone
+let padLocalTimeStr = 'TBD';
+try {
+  const padDate = new Date(launch.net);
+  padLocalTimeStr = new Intl.DateTimeFormat('en-US', {
+    timeZone: launch.pad.timezone,
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+    hour12: true,
+  }).format(padDate);
+} catch {
+  padLocalTimeStr = launch.net;
+}
+
+// Format UTC time
+const utcDate = new Date(launch.net);
+const utcTimeStr = isNaN(utcDate.getTime())
+  ? launch.net
+  : utcDate.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+
+// Status badge styling
+let statusClass = 'status-pending';
+if (launch.isPast) {
+  const s = (launch.status.name || '').toLowerCase();
+  if (s.includes('success')) {
+    statusClass = 'status-success';
+  } else if (s.includes('fail')) {
+    statusClass = 'status-fail';
+  } else {
+    statusClass = 'status-past';
+  }
+} else if (launch.status.abbrev.toLowerCase() === 'go') {
+  statusClass = 'status-go';
+}
+
+const mapUrl = launch.pad.latitude && launch.pad.longitude
+  ? `https://www.google.com/maps?q=${launch.pad.latitude},${launch.pad.longitude}&t=k`
+  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(launch.pad.name + ', ' + launch.pad.location)}`;
+
+const tagDataAttr = [launch.payloadTag.tag.toLowerCase(), launch.agency.name.toLowerCase()].join(',');
+---
+
+<article
+  class="launch-card"
+  data-tags={tagDataAttr}
+  data-net={launch.net}
+  data-past={launch.isPast ? 'true' : 'false'}
+>
+  <!-- CARD TOP HEADER -->
+  <div class="launch-header">
+    <div class="launch-status-group">
+      <span class={`launch-status-badge ${statusClass}`}>
+        [{launch.status.name.toUpperCase()}]
+      </span>
+      <span class="launch-tag-badge">
+        {launch.payloadTag.icon} {launch.payloadTag.label.toUpperCase()}
+      </span>
+    </div>
+    {launch.isPast ? (
+      <div class="countdown-badge past-badge">
+        [FLIGHT_COMPLETED]
+      </div>
+    ) : (
+      <div class="countdown-badge" data-countdown-net={launch.net}>
+        CALCULATING...
+      </div>
+    )}
+  </div>
+
+  <!-- MAIN TITLE & AGENCY -->
+  <div class="launch-title-block">
+    <h2 class="launch-title">
+      <span class="launch-vehicle">{launch.rocket.name}</span>
+      <span class="launch-divider">//</span>
+      <span class="launch-mission-name">{launch.mission.name}</span>
+    </h2>
+    <div class="launch-agency-meta">
+      PROVIDER: <strong>{launch.agency.name}</strong> &bull; ORBIT: <strong>{launch.mission.orbit}</strong>
+    </div>
+  </div>
+
+  <!-- KEY-VALUE TELEMETRY / LOCATION -->
+  <div class="launch-telemetry">
+    {launch.isPast && launch.status.description && (
+      <div class="telemetry-row">
+        <span class="telemetry-key">OUTCOME:</span>
+        <span class="telemetry-val outcome-highlight">
+          {launch.status.description}
+        </span>
+      </div>
+    )}
+
+    <div class="telemetry-row">
+      <span class="telemetry-key">LOCATION:</span>
+      <span class="telemetry-val">
+        <a
+          href={mapUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="location-map-link"
+          title="Open launch pad in Google Maps (Satellite)"
+        >
+          {launch.pad.name}, {launch.pad.location}
+          <span class="map-arrow">&nearr;</span>
+        </a>
+        {launch.pad.latitude && launch.pad.longitude && (
+          <span class="coords-subtle">
+            [{launch.pad.latitude.toFixed(3)}, {launch.pad.longitude.toFixed(3)}]
+          </span>
+        )}
+      </span>
+    </div>
+
+    <div class="telemetry-row">
+      <span class="telemetry-key">{launch.isPast ? 'LIFTOFF (PAD):' : 'PAD LOCAL:'}</span>
+      <span class="telemetry-val time-highlight">
+        {padLocalTimeStr} <span class="tz-subtle">({launch.pad.timezone})</span>
+      </span>
+    </div>
+
+    <div class="telemetry-row">
+      <span class="telemetry-key">{launch.isPast ? 'LIFTOFF (YOU):' : 'YOUR LOCAL:'}</span>
+      <span class="telemetry-val client-local-time" data-net={launch.net}>
+        {utcTimeStr}
+      </span>
+    </div>
+
+    <div class="telemetry-row">
+      <span class="telemetry-key">COORDINATED:</span>
+      <span class="telemetry-val text-muted">
+        {utcTimeStr}
+      </span>
+    </div>
+  </div>
+
+  <!-- MISSION BRIEFING -->
+  <div class="mission-briefing">
+    <div class="briefing-label">MISSION_BRIEFING:</div>
+    <p class="briefing-text">{launch.mission.description}</p>
+  </div>
+
+  <!-- FOOTER & ACTIONS -->
+  <div class="launch-footer">
+    <div class="launch-footer-tags">
+      <span class="footer-tag">TYPE: {launch.mission.type}</span>
+    </div>
+    <div class="launch-actions">
+      <a
+        href={mapUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="launch-btn-link"
+        title="Open launch pad on Google Maps"
+      >
+        [VIEW_MAP &nearr;]
+      </a>
+      {launch.webcastUrl && (
+        <a href={launch.webcastUrl} target="_blank" rel="noopener noreferrer" class="launch-btn-link">
+          [{launch.isPast ? 'WATCH_RECORDING' : 'WATCH_WEBCAST'} &rarr;]
+        </a>
+      )}
+      {!launch.isPast && (
+        <a
+          href={`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(launch.name)}&dates=${launch.net.replace(/[-:]/g, '').split('.')[0]}/${launch.net.replace(/[-:]/g, '').split('.')[0]}&details=${encodeURIComponent(launch.mission.description)}&location=${encodeURIComponent(launch.pad.location)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="launch-btn-link"
+        >
+          [+ ADD_CALENDAR]
+        </a>
+      )}
+    </div>
+  </div>
+</article>
+
+<style>
+  .launch-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .launch-card:hover {
+    border-color: var(--primary);
+  }
+
+  .launch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border-subtle);
+    margin-bottom: 10px;
+  }
+
+  .launch-status-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .launch-status-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .status-go {
+    background: #008800;
+    color: #FFFFFF;
+  }
+
+  .status-success {
+    background: #008800;
+    color: #FFFFFF;
+  }
+
+  .status-fail {
+    background: #CC0000;
+    color: #FFFFFF;
+  }
+
+  .status-past {
+    background: var(--text-muted);
+    color: var(--bg);
+  }
+
+  .status-pending {
+    background: var(--accent-tag-bg);
+    color: var(--accent-tag-text);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .launch-tag-badge {
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--surface-hover);
+    color: var(--text);
+    border: 1px solid var(--border-subtle);
+    padding: 2px 6px;
+  }
+
+  .countdown-badge {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .past-badge {
+    color: var(--text-muted);
+    border-color: var(--border-subtle);
+  }
+
+  .launch-title-block {
+    margin-bottom: 12px;
+  }
+
+  .launch-title {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .launch-vehicle {
+    color: var(--primary);
+  }
+
+  .launch-divider {
+    color: var(--text-muted);
+    margin: 0 4px;
+  }
+
+  .launch-mission-name {
+    color: var(--text);
+  }
+
+  .launch-agency-meta {
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+
+  .launch-telemetry {
+    background: var(--bg);
+    border: 1px solid var(--border-subtle);
+    padding: 8px 10px;
+    font-size: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .telemetry-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .telemetry-key {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 95px;
+    text-transform: uppercase;
+  }
+
+  .telemetry-val {
+    color: var(--text);
+  }
+
+  .outcome-highlight {
+    font-weight: 600;
+    color: #007700;
+  }
+
+  :root[data-mode="dark"] .outcome-highlight {
+    color: #44EE44;
+  }
+
+  .time-highlight {
+    font-weight: 600;
+  }
+
+  .tz-subtle {
+    color: var(--text-subtle);
+    font-size: 11px;
+    font-weight: normal;
+  }
+
+  .location-map-link {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+  }
+
+  .location-map-link:hover {
+    color: var(--primary-hover);
+  }
+
+  .map-arrow {
+    font-size: 11px;
+    text-decoration: none;
+    display: inline-block;
+    margin-left: 1px;
+  }
+
+  .coords-subtle {
+    font-size: 11px;
+    color: var(--text-subtle);
+    margin-left: 6px;
+    font-weight: normal;
+  }
+
+  .mission-briefing {
+    margin-bottom: 10px;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  .briefing-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  .briefing-text {
+    color: var(--text);
+  }
+
+  .launch-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px dotted var(--border-subtle);
+    font-size: 11px;
+  }
+
+  .launch-footer-tags {
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .launch-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .launch-btn-link {
+    color: var(--primary);
+    text-decoration: underline;
+    font-weight: 600;
+    font-size: 11.5px;
+  }
+
+  .launch-btn-link:hover {
+    color: var(--primary-hover);
+  }
+</style>
