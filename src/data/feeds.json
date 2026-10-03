@@ -71,5 +71,15 @@
       "modeling"
     ],
     "description": "Stats blog regression modeling strategies, Bayesian analysis, and clinical trial design."
+  },
+  {
+    "name": "Flavio Copes",
+    "url": "https://flaviocopes.com/rss.xml",
+    "site": "https://flaviocopes.com/",
+    "tags": [
+      "tools",
+      "ai"
+    ],
+    "description": "Practical posts focusing on coding agents, MCP servers, developer tooling, CLI utilities"
   }
 ]
