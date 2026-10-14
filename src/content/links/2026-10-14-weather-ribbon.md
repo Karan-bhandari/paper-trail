@@ -1,5 +1,5 @@
 ---
-title: "Cities"
+title: "Weather Ribbon"
 url: "https://weatherribbon.com/"
 date: 2026-10-14
 tags: ["weather", "climate", "data-visualization"]
