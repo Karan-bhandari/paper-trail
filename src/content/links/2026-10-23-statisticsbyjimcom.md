@@ -1,5 +1,5 @@
 ---
-title: "statisticsbyjim.com"
+title: "7 Statistical Rules of Thumb"
 url: "https://statisticsbyjim.com/basics/7-statistical-rules-of-thumb/"
 date: 2026-10-23
 tags: ["statistics", "math", "probability"]
