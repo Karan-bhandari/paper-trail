@@ -4,8 +4,16 @@ import LaunchCard from '../components/LaunchCard.astro';
 import SearchFilter from '../components/SearchFilter.astro';
 import launchesData from '../data/launches.json';
 
-const upcoming = launchesData.upcoming || launchesData.launches || [];
-const previous = launchesData.previous || [];
+const now = new Date();
+const rawUpcoming = launchesData.upcoming || launchesData.launches || [];
+const rawPrevious = launchesData.previous || [];
+
+// Ensure upcoming only contains future launches; any expired launches move to previous
+const upcoming = rawUpcoming.filter((l) => new Date(l.net).getTime() > now.getTime());
+const expiredFromUpcoming = rawUpcoming
+  .filter((l) => new Date(l.net).getTime() <= now.getTime())
+  .map((l) => ({ ...l, isPast: true }));
+const previous = [...expiredFromUpcoming, ...rawPrevious];
 const nextLaunch = upcoming[0] || null;
 
 // Collect unique payload tags across both sets for filter buttons
@@ -293,22 +301,31 @@ const lastUpdatedStr = launchesData.updatedAt
       }
 
       const diff = targetTime - now;
-      const isPast = diff < 0;
-      const absDiff = Math.abs(diff);
 
-      const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((absDiff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((absDiff / (1000 * 60)) % 60);
-      const seconds = Math.floor((absDiff / 1000) % 60);
+      if (diff < 0) {
+        const absDiff = Math.abs(diff);
+        // Only show T+ if it launched very recently (under 4 hours ago) for live mission tracking
+        if (absDiff < 4 * 60 * 60 * 1000) {
+          const hours = Math.floor(absDiff / (1000 * 60 * 60));
+          const minutes = Math.floor((absDiff / (1000 * 60)) % 60);
+          const seconds = Math.floor((absDiff / 1000) % 60);
+          const pad = (n) => String(n).padStart(2, '0');
+          el.textContent = `T+ ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+        } else {
+          el.textContent = '[FLIGHT_COMPLETED]';
+          el.classList.add('past-badge');
+        }
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
 
       const pad = (n) => String(n).padStart(2, '0');
       const timeString = `${days > 0 ? `${days}d ` : ''}${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
-
-      if (isPast) {
-        el.textContent = `T+ ${timeString}`;
-      } else {
-        el.textContent = `T- ${timeString}`;
-      }
+      el.textContent = `T- ${timeString}`;
     });
   }
 

@@ -118,8 +118,17 @@ async function fetchLaunches() {
     previousRes.json()
   ]);
 
-  const upcoming = (upcomingData.results || []).map((item) => transformLaunch(item, false));
-  const previous = (previousData.results || []).map((item) => transformLaunch(item, true));
+  const now = new Date();
+  const allUpcoming = (upcomingData.results || []).map((item) => transformLaunch(item, false));
+  const previousRaw = (previousData.results || []).map((item) => transformLaunch(item, true));
+
+  // Partition any launch whose net date has already passed into previous
+  const upcoming = allUpcoming.filter((l) => new Date(l.net).getTime() > now.getTime());
+  const passedUpcoming = allUpcoming
+    .filter((l) => new Date(l.net).getTime() <= now.getTime())
+    .map((l) => ({ ...l, isPast: true }));
+
+  const previous = [...passedUpcoming, ...previousRaw];
 
   const payload = {
     updatedAt: new Date().toISOString(),
