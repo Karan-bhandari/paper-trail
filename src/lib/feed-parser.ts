@@ -144,7 +144,7 @@ export function parseXmlFeed(xml: string, source: FeedSource, limit = 5): FeedIt
 }
 
 // Fetches a single feed with timeout and error resilience
-export async function fetchFeed(source: FeedSource, limit = 5, timeoutMs = 4000): Promise<FeedItem[]> {
+export async function fetchFeed(source: FeedSource, limit = 10, timeoutMs = 4000): Promise<FeedItem[]> {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -173,7 +173,7 @@ export async function fetchFeed(source: FeedSource, limit = 5, timeoutMs = 4000)
 }
 
 // Fetches all feeds concurrently and returns them sorted by date
-export async function aggregateAllFeeds(sources: FeedSource[], itemsPerFeed = 4): Promise<FeedItem[]> {
+export async function aggregateAllFeeds(sources: FeedSource[], itemsPerFeed = 10): Promise<FeedItem[]> {
   const promises = sources.map((src) => fetchFeed(src, itemsPerFeed));
   const results = await Promise.allSettled(promises);
 

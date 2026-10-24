@@ -6,7 +6,7 @@ import { aggregateAllFeeds } from '../lib/feed-parser';
 import feeds from '../data/feeds.json';
 
 // Fetch latest entries from all followed feeds at build time
-const radarItems = await aggregateAllFeeds(feeds, 4);
+const radarItems = await aggregateAllFeeds(feeds, 10);
 
 // Unique categories/tags for filtering
 const categories = Array.from(new Set(feeds.flatMap((f) => f.tags || []))).sort();

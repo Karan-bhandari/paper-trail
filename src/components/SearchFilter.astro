@@ -97,13 +97,13 @@ const {
 </style>
 
 <script is:inline>
-  // Live grep filter
-  const container = document.querySelector('.grep-filter-container');
-  if (container) {
+  // Live grep filter with multi-tag selection
+  document.querySelectorAll('.grep-filter-container').forEach((container) => {
     const targetSelector = container.getAttribute('data-target') || '.curated-link-card';
     const input = container.querySelector('.grep-input-field');
-    const tagButtons = container.querySelectorAll('.quick-tag-btn');
-    let activeTag = 'all';
+    const allBtn = container.querySelector('.quick-tag-btn[data-tag="all"]');
+    const tagButtons = container.querySelectorAll('.quick-tag-btn:not([data-tag="all"])');
+    const selectedTags = new Set();
 
     function filterItems() {
       const query = input ? input.value.toLowerCase().trim() : '';
@@ -117,7 +117,7 @@ const {
           .filter(Boolean);
 
         const matchesQuery = !query || text.includes(query);
-        const matchesTag = activeTag === 'all' || itemTags.includes(activeTag.toLowerCase());
+        const matchesTag = selectedTags.size === 0 || Array.from(selectedTags).some((t) => itemTags.includes(t));
 
         if (matchesQuery && matchesTag) {
           item.style.display = '';
@@ -131,13 +131,34 @@ const {
       input.addEventListener('input', filterItems);
     }
 
+    if (allBtn) {
+      allBtn.addEventListener('click', () => {
+        selectedTags.clear();
+        allBtn.classList.add('active');
+        tagButtons.forEach((b) => b.classList.remove('active'));
+        filterItems();
+      });
+    }
+
     tagButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
-        tagButtons.forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeTag = btn.getAttribute('data-tag') || 'all';
+        const tag = (btn.getAttribute('data-tag') || '').toLowerCase().trim();
+        if (selectedTags.has(tag)) {
+          selectedTags.delete(tag);
+          btn.classList.remove('active');
+        } else {
+          selectedTags.add(tag);
+          btn.classList.add('active');
+        }
+
+        if (selectedTags.size === 0) {
+          if (allBtn) allBtn.classList.add('active');
+        } else {
+          if (allBtn) allBtn.classList.remove('active');
+        }
+
         filterItems();
       });
     });
-  }
+  });
 </script>
