@@ -1,8 +1,17 @@
 ---
+export interface CrewMember {
+  name: string;
+  role?: string;
+  agency?: string;
+}
+
 export interface LaunchItem {
   id: string;
   name: string;
   isPast?: boolean;
+  probability?: number | null;
+  weatherConcerns?: string | null;
+  crew?: CrewMember[];
   status: {
     id?: number;
     name: string;
@@ -108,6 +117,14 @@ const tagDataAttr = [launch.payloadTag.tag.toLowerCase(), launch.agency.name.toL
       <span class={`launch-status-badge ${statusClass}`}>
         [{launch.status.name.toUpperCase()}]
       </span>
+      {launch.probability !== null && launch.probability !== undefined && (
+        <span
+          class={`launch-status-badge ${launch.probability >= 80 ? 'status-go' : launch.probability >= 50 ? 'status-pending' : 'status-fail'}`}
+          title={launch.weatherConcerns ? `Weather concerns: ${launch.weatherConcerns}` : `Forecast probability: ${launch.probability}% GO`}
+        >
+          [WX: {launch.probability}% GO]
+        </span>
+      )}
       <span class="launch-tag-badge">
         {launch.payloadTag.icon} {launch.payloadTag.label.toUpperCase()}
       </span>
@@ -187,6 +204,25 @@ const tagDataAttr = [launch.payloadTag.tag.toLowerCase(), launch.agency.name.toL
         {utcTimeStr}
       </span>
     </div>
+
+    {launch.probability !== null && launch.probability !== undefined && (
+      <div class="telemetry-row">
+        <span class="telemetry-key">WEATHER:</span>
+        <span class="telemetry-val">
+          <strong class={launch.probability >= 80 ? 'text-go' : 'text-risk'}>{launch.probability}% GO</strong>
+          {launch.weatherConcerns && <span class="weather-concerns"> &bull; {launch.weatherConcerns}</span>}
+        </span>
+      </div>
+    )}
+
+    {launch.crew && launch.crew.length > 0 && (
+      <div class="telemetry-row">
+        <span class="telemetry-key">CREW:</span>
+        <span class="telemetry-val crew-val">
+          🧑‍🚀 {launch.crew.map((c) => `${c.name}${c.agency ? ` (${c.agency})` : ''}`).join(', ')}
+        </span>
+      </div>
+    )}
   </div>
 
   <!-- MISSION BRIEFING -->
@@ -364,19 +400,22 @@ const tagDataAttr = [launch.payloadTag.tag.toLowerCase(), launch.agency.name.toL
     display: flex;
     align-items: baseline;
     gap: 8px;
-    flex-wrap: wrap;
   }
 
   .telemetry-key {
     font-size: 11px;
     font-weight: 700;
     color: var(--text-muted);
-    min-width: 95px;
+    width: 105px;
+    flex-shrink: 0;
     text-transform: uppercase;
   }
 
   .telemetry-val {
+    flex: 1;
+    min-width: 0;
     color: var(--text);
+    line-height: 1.45;
   }
 
   .outcome-highlight {
@@ -390,6 +429,31 @@ const tagDataAttr = [launch.payloadTag.tag.toLowerCase(), launch.agency.name.toL
 
   .time-highlight {
     font-weight: 600;
+  }
+
+  .text-go {
+    color: #008800;
+  }
+  :root[data-mode="dark"] .text-go {
+    color: #44EE44;
+  }
+
+  .text-risk {
+    color: #CC0000;
+  }
+  :root[data-mode="dark"] .text-risk {
+    color: #FF5555;
+  }
+
+  .weather-concerns {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: normal;
+  }
+
+  .crew-val {
+    font-weight: 600;
+    color: var(--text);
   }
 
   .tz-subtle {
@@ -421,6 +485,18 @@ const tagDataAttr = [launch.payloadTag.tag.toLowerCase(), launch.agency.name.toL
     color: var(--text-subtle);
     margin-left: 6px;
     font-weight: normal;
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 520px) {
+    .telemetry-row {
+      flex-direction: column;
+      gap: 2px;
+    }
+    .telemetry-key {
+      width: auto;
+    }
   }
 
   .mission-briefing {

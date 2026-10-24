@@ -22,7 +22,8 @@ function mapPayloadTag(missionType = '', description = '') {
   const typeLower = missionType.toLowerCase();
   const descLower = description.toLowerCase();
 
-  if (typeLower.includes('human') || descLower.includes('astronaut') || descLower.includes('crewed')) {
+  const isExplicitlyUncrewed = descLower.includes('uncrewed') || descLower.includes('unmanned');
+  if (!isExplicitlyUncrewed && (typeLower.includes('human') || descLower.includes('astronaut') || /\bcrewed\b/.test(descLower))) {
     return { tag: 'CREWED', label: 'Crewed / Astronauts', icon: '🧑‍🚀' };
   }
   if (typeLower.includes('rideshare') || descLower.includes('cubesat') || descLower.includes('microsatellite') || descLower.includes('nanosatellite')) {
@@ -44,6 +45,24 @@ function mapPayloadTag(missionType = '', description = '') {
     return { tag: 'TEST_FLIGHT', label: 'Test Flight', icon: '🧪' };
   }
   return { tag: 'PAYLOAD', label: missionType || 'General Payload', icon: '🚀' };
+}
+
+function extractCrew(item) {
+  const crew = [];
+  const stages = item.rocket?.spacecraft_stage || [];
+  for (const s of stages) {
+    const list = s.launch_crew || s.crew || s.onboard_crew || [];
+    for (const c of list) {
+      if (c.astronaut?.name) {
+        crew.push({
+          name: c.astronaut.name,
+          role: c.role?.role || '',
+          agency: c.astronaut.agency?.abbrev || c.astronaut.agency?.name || ''
+        });
+      }
+    }
+  }
+  return crew;
 }
 
 function transformLaunch(item, isPast = false) {
@@ -87,6 +106,9 @@ function transformLaunch(item, isPast = false) {
       orbit: item.mission?.orbit?.name || 'Orbital'
     },
     payloadTag,
+    probability: item.probability !== null && item.probability !== undefined ? item.probability : null,
+    weatherConcerns: item.weather_concerns || null,
+    crew: extractCrew(item),
     image: item.image?.thumbnail_url || item.image?.image_url || null,
     webcastUrl: item.vid_urls && item.vid_urls.length > 0 ? item.vid_urls[0].url : null,
     fetchedAt: new Date().toISOString()

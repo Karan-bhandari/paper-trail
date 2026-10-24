@@ -2,7 +2,7 @@
   "updatedAt": "2026-10-24T22:42:46.354Z",
   "count": 34,
   "upcomingCount": 34,
-  "previousCount": 16,
+  "previousCount": 17,
   "launches": [
     {
       "id": "6b95bcc8-1f88-4539-84fe-f63630138766",
@@ -1588,7 +1588,9 @@
       },
       "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305192320.png",
       "webcastUrl": null,
-      "fetchedAt": "2026-10-24T22:42:46.353Z"
+      "fetchedAt": "2026-10-24T22:42:46.353Z",
+      "probability": 85,
+      "weatherConcerns": "Cumulus Clouds"
     },
     {
       "id": "57ce0a39-d035-4f16-a418-bd6108f78199",
@@ -3001,6 +3003,64 @@
   ],
   "previous": [
     {
+      "id": "0102940a-4a60-4686-b34d-ced3fed6c595",
+      "name": "Falcon 9 Block 5 | Crew-9",
+      "isPast": true,
+      "status": {
+        "id": 3,
+        "name": "Launch Successful",
+        "abbrev": "Success",
+        "description": "The launch vehicle successfully inserted Crew Dragon Freedom with 2 astronauts into orbit headed for the International Space Station."
+      },
+      "net": "2024-09-28T17:17:21Z",
+      "windowStart": "2024-09-28T17:17:21Z",
+      "windowEnd": "2024-09-28T17:17:21Z",
+      "probability": 70,
+      "weatherConcerns": "Cumulus Cloud Rule, Flight Through Precipitation, Surface Electric Fields Rule",
+      "crew": [
+        {
+          "name": "Nick Hague",
+          "role": "Commander",
+          "agency": "NASA"
+        },
+        {
+          "name": "Aleksandr Gorbunov",
+          "role": "Mission Specialist",
+          "agency": "Roscosmos"
+        }
+      ],
+      "rocket": {
+        "name": "Falcon 9 Block 5",
+        "family": "Falcon"
+      },
+      "agency": {
+        "name": "SpaceX",
+        "type": "Commercial"
+      },
+      "pad": {
+        "name": "Space Launch Complex 40",
+        "location": "Cape Canaveral SFS, FL, USA",
+        "country": "USA",
+        "latitude": 28.5619,
+        "longitude": -80.5772,
+        "timezone": "America/New_York"
+      },
+      "mission": {
+        "name": "Crew-9",
+        "type": "Human Exploration",
+        "description": "SpaceX Crew-9 is the ninth operational astronaut rotation flight of a Crew Dragon spacecraft to the International Space Station as part of NASA's Commercial Crew Program.",
+        "orbit": "Low Earth Orbit"
+      },
+      "payloadTag": {
+        "tag": "CREWED",
+        "label": "Crewed / Astronauts",
+        "icon": "🧑‍🚀"
+      },
+      "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon2520925_image_20220301072106.jpeg",
+      "webcastUrl": "https://www.youtube.com/watch?v=0h09gC2yv6s",
+      "fetchedAt": "2026-10-24T22:49:52.255Z"
+    },
+    {
       "id": "f6af629d-39b5-4f86-bc0c-f8776444a858",
       "name": "Falcon 9 Block 5 | Starlink Group 15-15",
       "isPast": true,
@@ -3306,7 +3366,8 @@
       },
       "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon_9_liftof_image_thumbnail_20251102082912.jpeg",
       "webcastUrl": null,
-      "fetchedAt": "2026-10-24T22:42:46.354Z"
+      "fetchedAt": "2026-10-24T22:42:46.354Z",
+      "probability": 95
     },
     {
       "id": "69ebbcd2-b257-4070-9ef9-21e7d1f8a883",
@@ -3482,7 +3543,8 @@
       },
       "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305192619.jpeg",
       "webcastUrl": null,
-      "fetchedAt": "2026-10-24T22:42:46.354Z"
+      "fetchedAt": "2026-10-24T22:42:46.354Z",
+      "probability": 99
     },
     {
       "id": "97c6f5e1-299e-4652-b72d-9618ac047076",
@@ -3702,7 +3764,8 @@
       },
       "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305193632.jpeg",
       "webcastUrl": null,
-      "fetchedAt": "2026-10-24T22:42:46.354Z"
+      "fetchedAt": "2026-10-24T22:42:46.354Z",
+      "probability": 90
     }
   ]
 }
