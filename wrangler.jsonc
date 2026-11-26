@@ -1,0 +1,12 @@
+{
+  "name": "paper-trail",
+  "compatibility_date": "2026-11-26",
+  "routes": [
+    { "pattern": "kbkaran.com/paper-trail", "zone_name": "kbkaran.com" },
+    { "pattern": "kbkaran.com/paper-trail/*", "zone_name": "kbkaran.com" }
+  ],
+  "assets": {
+    "directory": "./dist",
+    "base_path": "/paper-trail"
+  }
+}
