@@ -76,6 +76,50 @@ _No response_
     const parsed = parseIssueBody('Check this out: https://simonwillison.net/2026/til', 'Dispatch: new link');
     expect(parsed.url).toBe('https://simonwillison.net/2026/til');
     expect(parsed.tags).toEqual(['reads']);
+    expect(parsed.title).toBe('');
+  });
+
+  it('prefers explicit Title field over issue title', () => {
+    const issueBody = `
+### URL
+
+https://weatherribbon.com/
+
+### Title
+
+Weather Ribbon
+
+### Tags
+
+weather, climate
+`;
+    const parsed = parseIssueBody(issueBody, 'Dispatch: Something Else');
+    expect(parsed.title).toBe('Weather Ribbon');
+    expect(parsed.url).toBe('https://weatherribbon.com/');
+  });
+
+  it('falls back to stripped issue title when Title field is blank', () => {
+    const issueBody = `
+### URL
+
+https://statisticsbyjim.com/basics/7-statistical-rules-of-thumb/
+
+### Title
+
+_No response_
+
+### Tags
+
+statistics
+`;
+    const parsed = parseIssueBody(issueBody, 'Dispatch: 7 Statistical Rules of Thumb');
+    expect(parsed.title).toBe('7 Statistical Rules of Thumb');
+  });
+
+  it('ignores generic or empty issue titles so scraping can run', () => {
+    expect(parseIssueBody('### URL\n\nhttps://example.com', 'Dispatch: ').title).toBe('');
+    expect(parseIssueBody('### URL\n\nhttps://example.com', 'Dispatch: Add new link').title).toBe('');
+    expect(parseIssueBody('### URL\n\nhttps://example.com', 'Dispatch: https://example.com').title).toBe('');
   });
 });
 

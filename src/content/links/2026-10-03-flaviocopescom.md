@@ -1,5 +1,5 @@
 ---
-title: "flaviocopes.com"
+title: "A Deep Dive into Jev, TypeSafe's System One Model"
 url: "https://flaviocopes.com/jev/"
 date: 2026-10-03
 tags: ["llm", "agents", "tooling"]

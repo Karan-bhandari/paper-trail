@@ -88,10 +88,12 @@ ${notes}
 // Parses GitHub issue body and title
 export function parseIssueBody(body = '', title = '') {
   const urlMatch = body.match(/###\s*URL\s*\n+([^\n#]+)/i);
+  const titleMatch = body.match(/###\s*Title\s*\n+([^\n#]+)/i);
   const tagsMatch = body.match(/###\s*Tags\s*\n+([^\n#]+)/i);
   const notesMatch = body.match(/###\s*Notes(?:\s*\/\s*Takeaway)?\s*\n+([\s\S]*?)(?:###|$)/i);
 
   let url = urlMatch ? urlMatch[1].trim() : '';
+  let parsedTitle = titleMatch ? titleMatch[1].trim() : '';
   let tags = tagsMatch ? tagsMatch[1].trim() : '';
   let notes = notesMatch ? notesMatch[1].trim() : '';
 
@@ -102,6 +104,15 @@ export function parseIssueBody(body = '', title = '') {
 
   url = url.replace(/^[<(\[]+|[>)\]]+$/g, '').trim();
 
+  if (parsedTitle.toLowerCase() === '_no response_') parsedTitle = '';
+  if (!parsedTitle && title) {
+    const stripped = title.replace(/^dispatch:\s*/i, '').trim();
+    const isGeneric = /^(?:(?:add\s+)?new\s+link|https?:\/\/\S+)$/i.test(stripped);
+    if (stripped && !isGeneric) {
+      parsedTitle = stripped;
+    }
+  }
+
   if (tags.toLowerCase() === '_no response_') tags = '';
   if (notes.toLowerCase() === '_no response_') notes = '';
 
@@ -109,7 +120,7 @@ export function parseIssueBody(body = '', title = '') {
     ? tags.split(',').map((t) => t.trim()).filter(Boolean)
     : ['reads'];
 
-  return { url, tags: tagList.length > 0 ? tagList : ['reads'], notes };
+  return { title: parsedTitle, url, tags: tagList.length > 0 ? tagList : ['reads'], notes };
 }
 
 // CLI entrypoint
@@ -137,12 +148,14 @@ async function main() {
   const isTest = args.includes('--test') || args.includes('--dry-run');
   const filteredArgs = args.filter((a) => !a.startsWith('--'));
 
+  let inputTitle = '';
   let inputUrl = '';
   let inputNotes = '';
   let inputTags = ['reads'];
 
   if (fromIssue) {
     const parsed = parseIssueBody(process.env.ISSUE_BODY || '', process.env.ISSUE_TITLE || '');
+    inputTitle = parsed.title;
     inputUrl = parsed.url;
     inputNotes = parsed.notes;
     inputTags = parsed.tags;
@@ -169,7 +182,7 @@ async function main() {
   console.log(`[*] Fetching metadata for ${inputUrl}...`);
   const scraped = await scrapeUrl(inputUrl);
 
-  const title = scraped.title || new URL(inputUrl).hostname;
+  const title = inputTitle || scraped.title || new URL(inputUrl).hostname;
   const notes = inputNotes || scraped.description || 'Interesting find.';
   const today = new Date().toISOString().slice(0, 10);
   const slug = slugify(title) || 'link';
